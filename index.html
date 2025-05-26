@@ -37,16 +37,22 @@
   <div id="wishlist"></div>
 
   <script>
-    const apiUrl = "https://kubl-proxy.kubl17.workers.dev/";
-
-    let wishlistData = [];
-
-    async function fetchWishlist() {
-      const res = await fetch(apiUrl);
-      const json = await res.json();
-      wishlistData = json.record.wishlist;
-      renderWishlist();
-    }
+    let wishlistData = [
+      {
+        product: "Sluchátka Sony",
+        url: "https://example.com/sluchatka",
+        image: "https://via.placeholder.com/300x200?text=Sluchatka",
+        price: "1 500 Kč",
+        reservedBy: null
+      },
+      {
+        product: "Kniha: Umění programování",
+        url: "https://example.com/kniha",
+        image: "https://via.placeholder.com/300x200?text=Kniha",
+        price: "650 Kč",
+        reservedBy: null
+      }
+    ];
 
     function renderWishlist() {
       const container = document.getElementById("wishlist");
@@ -69,30 +75,17 @@
       });
     }
 
-    async function reserve(index) {
+    function reserve(index) {
       const input = document.getElementById(`input-${index}`);
       const name = input.value.trim();
       if (!name) return alert("Zadej své jméno!");
 
       wishlistData[index].reservedBy = name;
-
-      const response = await fetch(apiUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ wishlist: wishlistData })
-      });
-
-      if (response.ok) {
-        alert("Zamluveno!");
-        fetchWishlist();
-      } else {
-        alert("Chyba při ukládání.");
-      }
+      alert("Zamluveno (lokálně)!");
+      renderWishlist();
     }
 
-    fetchWishlist();
+    renderWishlist();
   </script>
 </body>
 </html>
