@@ -1,43 +1,31 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8">
-  <title>JSONBin přes Cloudflare Worker</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 2rem;
-      background: #f9f9f9;
-    }
-    pre {
-      background: #eee;
-      padding: 1rem;
-      border-radius: 5px;
-      overflow-x: auto;
-    }
-  </style>
-</head>
-<body>
-  <h1>Načtená data z JSONBin</h1>
-  <pre id="output">Načítání...</pre>
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
 
-  <script>
-    const output = document.getElementById('output');
+    const BIN_ID = "6834247e8561e97a501b9af2"; // tvůj bin
+    const API_KEY = "TVŮJ_TAJNÝ_KLÍČ";         // NEZVEŘEJŇUJ NIKDY DO FRONTENDU
+    const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    // 🔁 ZDE nahraď svou skutečnou adresou Cloudflare Workeru
-    const proxyUrl = 'https://tvuj-worker.username.workers.dev/proxy/b/6834247e8561e97a501b9af2';
-
-    fetch(proxyUrl)
-      .then(response => {
-        if (!response.ok) throw new Error('Chyba při načítání dat');
-        return response.json();
-      })
-      .then(data => {
-        output.textContent = JSON.stringify(data, null, 2);
-      })
-      .catch(error => {
-        output.textContent = 'Chyba: ' + error.message;
+    if (request.method === "GET") {
+      const response = await fetch(BIN_URL, {
+        headers: { "X-Master-Key": API_KEY }
       });
-  </script>
-</body>
-</html>
+      return response;
+    }
+
+    if (request.method === "PUT") {
+      const body = await request.text();
+      const response = await fetch(BIN_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": API_KEY
+        },
+        body
+      });
+      return response;
+    }
+
+    return new Response("Method not allowed", { status: 405 });
+  }
+}
