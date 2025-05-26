@@ -1,31 +1,98 @@
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wishlist</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    .gift {
+      background: white;
+      padding: 16px;
+      margin: 16px 0;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+    .gift img {
+      max-width: 100%;
+      height: auto;
+    }
+    input[type="text"] {
+      width: 60%;
+      padding: 8px;
+      margin-right: 8px;
+    }
+    button {
+      padding: 8px 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎁 Wishlist</h1>
+  <div id="wishlist"></div>
 
-    const BIN_ID = "6834247e8561e97a501b9af2"; // tvůj bin
-    const API_KEY = "$2a$10$9AWOPjDcqkeAt3vEbNRv6uJGiOHuzf0YdWooGJrLcKxV1f.5NJqbO";         // NEZVEŘEJŇUJ NIKDY DO FRONTENDU
-    const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+  <script>
+    const apiUrl = "https://kubl-proxy.kubl17.workers.dev/";
 
-    if (request.method === "GET") {
-      const response = await fetch(BIN_URL, {
-        headers: { "X-Master-Key": API_KEY }
-      });
-      return response;
+    let wishlistData = [];
+
+    async function fetchWishlist() {
+      const res = await fetch(apiUrl);
+      const json = await res.json();
+      wishlistData = json.record.wishlist;
+      renderWishlist();
     }
 
-    if (request.method === "PUT") {
-      const body = await request.text();
-      const response = await fetch(BIN_URL, {
+    function renderWishlist() {
+      const container = document.getElementById("wishlist");
+      container.innerHTML = "";
+
+      wishlistData.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "gift";
+        div.innerHTML = `
+          <h2><a href="${item.url}" target="_blank">${item.product}</a></h2>
+          <img src="${item.image}" alt="${item.product}" />
+          <p><strong>Cena:</strong> ${item.price}</p>
+          <p><strong>Rezervováno:</strong> ${item.reservedBy || "nikým"}</p>
+          <div>
+            <input type="text" placeholder="Tvé jméno" id="input-${index}" />
+            <button onclick="reserve(${index})">Zamluvit</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function reserve(index) {
+      const input = document.getElementById(`input-${index}`);
+      const name = input.value.trim();
+      if (!name) return alert("Zadej své jméno!");
+
+      wishlistData[index].reservedBy = name;
+
+      const response = await fetch(apiUrl, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": API_KEY
+          "Content-Type": "application/json"
         },
-        body
+        body: JSON.stringify({ wishlist: wishlistData })
       });
-      return response;
+
+      if (response.ok) {
+        alert("Zamluveno!");
+        fetchWishlist();
+      } else {
+        alert("Chyba při ukládání.");
+      }
     }
 
-    return new Response("Method not allowed", { status: 405 });
-  }
-}
+    fetchWishlist();
+  </script>
+</body>
+</html>
